@@ -161,7 +161,7 @@ namespace RDI_Util
             const float3 vtx2 = Light::DecodeEmissiveTriV2(emissive);
             float3 lightNormal = cross(vtx1 - emissive.Vtx0, vtx2 - emissive.Vtx0);
             float twoArea = length(lightNormal);
-            lightNormal = isZERO(dot(lightNormal, lightNormal)) ? 0 : lightNormal / twoArea;
+            lightNormal = isZERO(twoArea) ? 0 : lightNormal / twoArea;
             lightNormal = emissive.IsDoubleSided() && dot(-wi_offset, lightNormal) < 0 ? 
                 -lightNormal : lightNormal;
 
@@ -177,8 +177,9 @@ namespace RDI_Util
 #endif
         {
             wi_offset = r_curr.lightPos - candidate.pos;
-            const bool isZero = isZERO(dot(wi_offset, wi_offset));
-            t_offset = isZero ? 0 : length(wi_offset);
+            const float t_offset2 = dot(wi_offset, wi_offset);
+            const bool isZero = isZERO(t_offset2);
+            t_offset = isZero ? 0 : sqrt(t_offset2);
             wi_offset = isZero ? wi_offset : wi_offset / t_offset;
             candidate.surface.SetWi(wi_offset, candidate.normal);
 
@@ -187,7 +188,7 @@ namespace RDI_Util
                 lightNormal = -lightNormal;
 
             float cosThetaPrime = saturate(dot(lightNormal, -wi_offset));
-            const float dwdA = isZero ? 0 : cosThetaPrime / (t_offset * t_offset);
+            const float dwdA = isZero ? 0 : cosThetaPrime / t_offset2;
             target_offset = r_curr.le * dwdA;
         }
 

@@ -174,7 +174,7 @@ namespace ReSTIR_Util
             const uint lightID = tri.ID;
 
             if(tri.twoSided && dot(pos - tri.pos, lightSample.normal) < 0)
-                lightSample.normal *= -1;
+                lightSample.normal = -lightSample.normal;
 #else
             Light::AliasTableSample entry = Light::AliasTableSample::get(globals.aliasTable, 
                 numEmissives, rng);

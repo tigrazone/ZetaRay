@@ -230,7 +230,7 @@ namespace RPT_Util
         const bool twoSided = tri.twoSided;
 
         if(tri.twoSided && dot(pos - tri.pos, lightSample.normal) < 0)
-            lightSample.normal *= -1;
+            lightSample.normal = -lightSample.normal;
 
         // Deterministic RNG state regardless of USE_PRESAMPLED_SETS
         rng.Uniform3D();

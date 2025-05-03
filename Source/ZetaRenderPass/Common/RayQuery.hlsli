@@ -157,7 +157,7 @@ namespace RtRayQuery
             if(wiBackface)
             {
                 if(transmissive)
-                    normal *= -1;
+                    normal = -normal;
                 else
                     return ret;
             }
@@ -306,7 +306,7 @@ namespace RtRayQuery
         if(wiBackface)
         {
             if(transmissive)
-                normal *= -1;
+                normal = -normal;
             else
                 return false;
         }
@@ -467,9 +467,9 @@ namespace RtRayQuery
         // Reverse normal for double-sided surfaces
         if(mat.DoubleSided() && hitBackface)
         {
-            hitInfo.normal *= -1;
-            hitInfo.triDiffs.dndu *= -1;
-            hitInfo.triDiffs.dndv *= -1;
+            hitInfo.normal = -hitInfo.normal;
+            hitInfo.triDiffs.dndu = -hitInfo.triDiffs.dndu;
+            hitInfo.triDiffs.dndv = -hitInfo.triDiffs.dndv;
         }
 
         float3 baseColor = mat.GetBaseColorFactor();

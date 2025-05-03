@@ -20,7 +20,7 @@ namespace LVG
         int3 voxelIdxCamSpace = voxelIdx - dimDiv2;
         voxelIdxCamSpace += voxelIdx < dimDiv2;
         // voxel space Y points in the opposite direction of camera space Y
-        voxelIdxCamSpace.y *= -1;
+        voxelIdxCamSpace.y = -voxelIdxCamSpace.y;
 
         float3 corner = voxelIdxCamSpace * 2 * voxelExtents;
         float3 s = Math::SignNotZero(voxelIdxCamSpace);
@@ -43,7 +43,7 @@ namespace LVG
             return false;
         
         voxel *= Math::SignNotZero(posV);
-        voxel.y *= -1;
+        voxel.y = -voxel.y;
 
         int3 voxelIdx = int3(voxel) + dimDiv2;
         voxelIdx -= int3(posV.x < 0, posV.y >= 0, posV.z < 0);

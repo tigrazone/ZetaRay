@@ -218,9 +218,9 @@ namespace GBufferRT
         // reverse normal for double-sided meshes if facing away from camera
         if (mat.DoubleSided() && dot(wo, geoNormal) < 0)
         {
-            shadingNormal *= -1;
-            dndu *= -1;
-            dndv *= -1;
+            shadingNormal = -shadingNormal;
+            dndu = -dndu;
+            dndv = -dndv;
         }
 
         // Neighborhood around surface point (approximated by tangent plane from geometry normal) is visible, 

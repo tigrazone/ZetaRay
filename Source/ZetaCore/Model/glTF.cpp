@@ -821,13 +821,13 @@ namespace
             //         = |  u_2  v_2  -w_2 | x
             //           | -u_3 -v_3   w_3 |
             //
-            M.m[0].z *= -1.0f;
-            M.m[1].z *= -1.0f;
-            M.m[2].x *= -1.0f;
-            M.m[2].y *= -1.0f;
+            M.m[0].z = -M.m[0].z;
+            M.m[1].z = -M.m[1].z;
+            M.m[2].x = -M.m[2].x;
+            M.m[2].y = -M.m[2].y;
 
             // Convert translation to LHS
-            M.m[2].w *= -1.0f;
+            M.m[2].w = -M.m[2].w;
 
             vM = load4x4(M);
             decomposeTRS(vM, transform.Scale, transform.Rotation, transform.Translation);

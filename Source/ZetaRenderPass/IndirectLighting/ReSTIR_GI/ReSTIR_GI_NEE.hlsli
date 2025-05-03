@@ -80,7 +80,7 @@ namespace RGI_Util
             const uint lightID = tri.ID;
 
             if(tri.twoSided && dot(pos - tri.pos, lightSample.normal) < 0)
-                lightSample.normal *= -1;
+                lightSample.normal = -lightSample.normal;
 #else
             Light::AliasTableSample entry = Light::AliasTableSample::get(globals.aliasTable, 
                 numEmissives, rng);
@@ -143,7 +143,7 @@ namespace RGI_Util
                 lightID = s.ID;
 
                 if(s.twoSided && dot(lightSample.normal, pos - lightSample.pos) < 0)
-                    lightSample.normal *= -1;
+                    lightSample.normal = -lightSample.normal;
             }
             else
             {
@@ -159,7 +159,7 @@ namespace RGI_Util
                 lightID = tri.ID;
 
                 if(tri.twoSided && dot(pos - tri.pos, lightSample.normal) < 0)
-                    lightSample.normal *= -1;
+                    lightSample.normal = -lightSample.normal;
             }
 
             const float t = length(lightSample.pos - pos);

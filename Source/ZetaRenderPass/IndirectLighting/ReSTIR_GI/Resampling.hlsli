@@ -476,7 +476,7 @@ namespace RGI_Util
         float pixelWidth = 2.0 * g_frame.TanHalfFOV * z_view / max(ndotwo, 1e-6);
 
         // Curvature computation above used the opposite signs
-        k *= -1.0f;
+        k = -k;
         k *= pixelWidth;
         float imageDist = t / max(1.0f - 2 * k * t * whdotwo, 1e-6);
 
@@ -507,7 +507,7 @@ namespace RGI_Util
         float k, float z_view, float whdotwo, float ndotwo, ConstantBuffer<cbFrameConstants> g_frame)
     {
         float pixelWidth = 2.0 * g_frame.TanHalfFOV * z_view / max(ndotwo, 1e-6);
-        k *= -1.0f;
+        k = -k;
         k *= pixelWidth;
         float imageDist_tr = eta / (k * (1 - 1 / eta) - 1 / (eta * t));
         float imageDist_refl = t / (1.0f - 2 * k * t * whdotwo);

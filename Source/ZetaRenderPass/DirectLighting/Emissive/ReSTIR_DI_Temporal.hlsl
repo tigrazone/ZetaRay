@@ -70,16 +70,16 @@ Reservoir RIS_InitialCandidates(uint2 DTid, float3 pos, float3 normal, float rou
             const float3 vtx2 = Light::DecodeEmissiveTriV2(emissive);
             lightNormal = cross(vtx1 - emissive.Vtx0, vtx2 - emissive.Vtx0);
             float twoArea = length(lightNormal);
-            lightNormal = isZERO(dot(lightNormal, lightNormal)) ? 0 : lightNormal / twoArea;
-            lightNormal = emissive.IsDoubleSided() && dot(-wi, lightNormal) < 0 ? -lightNormal : lightNormal;
+            lightNormal = isZERO(twoArea) ? 0 : lightNormal / twoArea;
             doubleSided = emissive.IsDoubleSided();
+            lightNormal = doubleSided && dot(-wi, lightNormal) < 0 ? -lightNormal : lightNormal;
             emissiveID = emissive.ID;
 
             // Light is backfacing
             if(dot(-wi, lightNormal) > 0)
             {
                 const float lightSourcePdf = g_aliasTable[hitInfo.emissiveTriIdx].CachedP_Orig;
-                const float pdf_light = lightSourcePdf * (1.0f / (0.5f * twoArea));
+                const float pdf_light = lightSourcePdf * (2.0f / twoArea);
 
                 // solid angle measure to area measure
                 const float dwdA = saturate(dot(lightNormal, -wi)) / (hitInfo.t * hitInfo.t);
@@ -148,10 +148,11 @@ Reservoir RIS_InitialCandidates(uint2 DTid, float3 pos, float3 normal, float rou
 
         float3 target = 0;
         float3 wi = lightSample.pos - pos;
-        const bool isZero = isZERO(dot(wi, wi));
-        const float t = isZero ? 0 : length(wi);
+        const float t2 = dot(wi, wi);
+        const bool isZero = isZERO(t2);
+        const float t = sqrt(t2);
         wi = isZero ? wi : wi / t;
-        const float dwdA = isZero ? 0 : saturate(dot(lightSample.normal, -wi)) / (t * t);
+        const float dwdA = isZero ? 0 : saturate(dot(lightSample.normal, -wi)) / t2;
         surface.SetWi(wi, normal);
 
         // skip backfacing lights

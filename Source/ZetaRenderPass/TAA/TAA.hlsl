@@ -28,7 +28,7 @@ ConstantBuffer<cbTAA> g_local : register(b1);
 // Ref: M. Pharr, W. Jakob, and G. Humphreys, Physically Based Rendering, Morgan Kaufmann, 2016.
 float Mitchell1D(in float x, in float B, in float C)
 {
-    x = abs(2.0f * x);
+    x = abs(x + x);
     const float oneDivSix = 1.0f / 6.0f;
 
     if (x > 1)
@@ -84,7 +84,8 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID)
         return;
     }
 
-    float weightSum = Mitchell1D(0, 0.33f, 0.33f) * Mitchell1D(0, 0.33f, 0.33f);
+    float weightSum = Mitchell1D(0, 0.33f, 0.33f);
+    weightSum *= weightSum;
     float3 reconstructed = currColor * weightSum;
     float3 firstMoment = currColor;
     float3 secondMoment = currColor * currColor;
