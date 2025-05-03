@@ -118,7 +118,7 @@ namespace Light
             const float3 vtx2 = Light::DecodeEmissiveTriV2(tri);
             ret.pos = (1.0f - ret.bary.x - ret.bary.y) * tri.Vtx0 + ret.bary.x * vtx1 + ret.bary.y * vtx2;
             ret.normal = cross(vtx1 - tri.Vtx0, vtx2 - tri.Vtx0);
-            bool normalIs0 = dot(ret.normal, ret.normal) == 0;
+            bool normalIs0 = isZERO(dot(ret.normal, ret.normal));
             float twoArea = length(ret.normal);
             ret.pdf = normalIs0 ? 0.0f : 2.0f / twoArea;
 
@@ -180,7 +180,7 @@ namespace Light
         const float emissiveStrength = (float)tri.GetStrength();
         float3 le = emissiveFactor * emissiveStrength;
 
-        if (Math::Luminance(le) == 0)
+        if (isZERO(Math::Luminance(le)))
             return 0.0;
 
         uint32_t emissiveTex = tri.GetTex();

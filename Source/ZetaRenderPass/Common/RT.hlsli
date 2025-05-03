@@ -74,29 +74,35 @@ namespace RT
             float newWidth = 0;
 
             // Find intersection of rays p + wq and p_u + w_u t_u. Skip in case of TIR.
-            if(dot(t_u, t_u) != 0)
+            if(isNotZERO(dot(t_u, t_u)))
             {
                 // Solve for x = (A^T A)^-1 A^T b where A = [t_u -q]
                 float3 b = p - p_u;
                 float tdotq = dot(t_u, q);
                 float det = 1 - tdotq * tdotq;
-                float3 A1 = float3(tdotq * t_u.x - q.x,
-                    tdotq * t_u.y - q.y,
-                    tdotq * t_u.z - q.z);
-                newWidth += det == 0 ? 0 : abs(dot(A1, b) / det);
+                if(isNotZERO(det))
+                {
+                    float3 A1 = float3(tdotq * t_u.x - q.x,
+                        tdotq * t_u.y - q.y,
+                        tdotq * t_u.z - q.z);
+                    newWidth += abs(dot(A1, b) / det);
+                }
             }
 
             // Find intersection of rays p + wq and p_l + w_l t_l. Skip in case of TIR.
-            if(dot(t_l, t_l) != 0)
+            if(isNotZERO(dot(t_l, t_l)))
             {
                 // Solve for x = (A^T A)^-1 A^T b where A = [t_l -q]
                 float3 b = p - p_l;
                 float tdotq = dot(t_l, q);
                 float det = 1 - tdotq * tdotq;
-                float3 A1 = float3(tdotq * t_l.x - q.x,
-                    tdotq * t_l.y - q.y,
-                    tdotq * t_l.z - q.z);
-                newWidth += det == 0 ? 0 : abs(dot(A1, b) / det);
+                if(isNotZERO(det))
+                {
+                    float3 A1 = float3(tdotq * t_l.x - q.x,
+                        tdotq * t_l.y - q.y,
+                        tdotq * t_l.z - q.z);
+                    newWidth += abs(dot(A1, b) / det);
+                }
             }
 
             this.Width = (half)newWidth;
@@ -106,7 +112,7 @@ namespace RT
         void UpdateConeGeometry_Tr_CurvatureIs0(float3 wo, float3 wi, float3 normal, float eta, 
             float3 p, float3 origin)
         {
-            if(this.SpreadAngle == 0)
+            if(isZERO(this.SpreadAngle))
                 return;
 
             float3 m = wo - dot(normal, wo) * normal;
@@ -143,35 +149,39 @@ namespace RT
 
             // Approximate solution but faster
 #if 1
-            float2 newWidth = float2(dot(p_u - p, q), dot(p_l - p, q));
-            newWidth *= newWidth;
-            newWidth = sqrt(newWidth);
-            this.Width = (half)(newWidth.x * (dot(t_u, t_u) != 0) + newWidth.y * (dot(t_l, t_l) != 0));
+            float2 newWidth = float2(abs(dot(p_u - p, q)), abs(dot(p_l - p, q)));
+            this.Width = (half)(newWidth.x * (isNotZERO(dot(t_u, t_u))) + newWidth.y * (isNotZERO(dot(t_l, t_l))));
 
             // Exact solution
 #else
             float newWidth = 0;
 
-            if(dot(t_u, t_u) != 0)
+            if(isNotZERO(dot(t_u, t_u)))
             {
                 float3 b = p - p_u;
                 float tdotq = dot(t_u, q);
                 float det = 1 - tdotq * tdotq;
-                float3 A1 = float3(tdotq * t_u.x - q.x,
-                    tdotq * t_u.y - q.y,
-                    tdotq * t_u.z - q.z);
-                newWidth += det == 0 ? 0 : abs(dot(A1, b) / det);
+                if(isNotZERO(dot))
+                {
+                    float3 A1 = float3(tdotq * t_u.x - q.x,
+                        tdotq * t_u.y - q.y,
+                        tdotq * t_u.z - q.z);
+                    newWidth += abs(dot(A1, b) / det);
+                }
             }
 
-            if(dot(t_l, t_l) != 0)
+            if(isNotZERO(dot(t_l, t_l)))
             {
                 float3 b = p - p_l;
                 float tdotq = dot(t_l, q);
                 float det = 1 - tdotq * tdotq;
-                float3 A1 = float3(tdotq * t_l.x - q.x,
-                    tdotq * t_l.y - q.y,
-                    tdotq * t_l.z - q.z);
-                newWidth += det == 0 ? 0 : abs(dot(A1, b) / det);
+                if(isNotZERO(det))
+                {
+                    float3 A1 = float3(tdotq * t_l.x - q.x,
+                        tdotq * t_l.y - q.y,
+                        tdotq * t_l.z - q.z);
+                    newWidth += abs(dot(A1, b) / det);
+                }
             }
 
             this.Width = (half)newWidth;
@@ -275,7 +285,7 @@ namespace RT
     T BalanceHeuristic(float p_1, float p_2, T f, float n_1 = 1, float n_2 = 1)
     {
         float denom = n_1 * p_1 + n_2 * p_2;
-        if(denom == 0)
+        if(isZERO(denom))
             return 0;
 
         return (n_1 * f) / denom;
@@ -287,7 +297,7 @@ namespace RT
         float n_3 = 1)
     {
         float denom = n_1 * p_1 + n_2 * p_2 + n_3 * p_3;
-        if(denom == 0)
+        if(isZERO(denom))
             return 0;
 
         return (n_1 * f) / denom;
@@ -300,7 +310,7 @@ namespace RT
         float a = n_1 * p_1;
         float b = n_2 * p_2;
         float denom = a * a + b * b;
-        if(denom == 0)
+        if(isZERO(denom))
             return 0;
 
         return ((n_1 * n_1 * p_1 * f) / denom);
@@ -377,8 +387,8 @@ namespace RT
             // If ray is parallel to tangent plane, set differential to a large value,
             // so that the highest mip would be used. From this point on, this
             // differential is undefined.
-            dpdx = denom_x != 0 ? hitPoint_x - hitPoint : FLT16_MAX;
-            dpdy = denom_y != 0 ? hitPoint_y - hitPoint : FLT16_MAX;
+            dpdx = isNotZERO(denom_x) ? hitPoint_x - hitPoint : FLT16_MAX;
+            dpdy = isNotZERO(denom_y) ? hitPoint_y - hitPoint : FLT16_MAX;
             // dpdx = denom_x != 0 ? hitPoint_x - hitPoint : 0;
             // dpdy = denom_y != 0 ? hitPoint_y - hitPoint : 0;
         }

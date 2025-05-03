@@ -61,7 +61,7 @@ float3 EstimateIndirectLighting(uint2 DTid, float3 origin, float2 lensSample, fl
     const uint sampleSetIdx = rngGroup.UniformUintBounded_Faster(g_local.SampleSetSize_NumSampleSets >> 16);
 
     BSDF::BSDFSample bsdfSample = BSDF::SampleBSDF(normal, surface, rngThread);
-    if(bsdfSample.pdf == 0)
+    if(isZERO(bsdfSample.pdf))
         return 0;
 
     Hit hitInfo = Hit::FindClosest<true, true>(pos, normal, bsdfSample.wi, globals.bvh, 

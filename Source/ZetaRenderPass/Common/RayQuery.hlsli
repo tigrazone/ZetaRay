@@ -24,7 +24,7 @@ namespace RtRayQuery
             ret.ID = UINT32_MAX;
 
             float ndotwi = dot(normal, wi);
-            if(ndotwi == 0)
+            if(isZERO(ndotwi))
                 return ret;
 
             bool wiBackface = ndotwi < 0;
@@ -344,14 +344,14 @@ namespace RtRayQuery
             return false;
 
         float ndotwi = dot(normal, wi);
-        if(ndotwi == 0)
+        if(isZERO(ndotwi))
             return false;
 
         bool wiBackface = ndotwi < 0;
         if(wiBackface)
         {
             if(transmissive)
-                normal *= -1;
+                normal = -normal;
             else
                 return false;
         }
@@ -482,7 +482,7 @@ namespace RtRayQuery
         const uint32_t baseColorTex = mat.GetBaseColorTex();
         const uint32_t metallicRoughnessTex = mat.GetMetallicRoughnessTex();
 
-        if ((trDepth == 0) && (baseColorTex != Material::INVALID_ID))
+        if (isZERO(trDepth) && (baseColorTex != Material::INVALID_ID))
         {
             uint offset = NonUniformResourceIndex(g_frame.BaseColorMapsDescHeapOffset + 
                 baseColorTex);

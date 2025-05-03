@@ -229,7 +229,7 @@ namespace RPT_Util
                 inA.xyz = g_cbA[DTid].xyz;
 
             ctx.throughput = inA.xyz;
-            if(dot(ctx.throughput, ctx.throughput) == 0)
+            if(isZERO(dot(ctx.throughput, ctx.throughput)))
                 return ctx;
 
             uint4 inB = g_cbB[DTid];
@@ -302,7 +302,7 @@ namespace RPT_Util
             else
                 g_rbA[DTid].xyz = this.throughput;
 
-            if(dot(this.throughput, this.throughput) == 0)
+            if(isZERO(dot(this.throughput, this.throughput)))
                 return;
 
             uint16_t2 e1 = Math::EncodeOct32(this.normal);
@@ -441,7 +441,7 @@ namespace RPT_Util
             bsdfSample = BSDF::SampleBSDF(ctx.normal, ctx.surface, ctx.rngReplay);
 
             // Not invertible -- base path would've stopped here
-            if(dot(bsdfSample.bsdfOverPdf, bsdfSample.bsdfOverPdf) == 0)
+            if(isZERO(dot(bsdfSample.bsdfOverPdf, bsdfSample.bsdfOverPdf)))
             {
                 ctx.throughput = 0;
                 return;
@@ -496,7 +496,7 @@ namespace RPT_Util
         BSDF::BSDFSamplerEval eval = BSDF::EvalBSDFSampler(ctx.normal, ctx.surface, w_k_min_1, 
             rc.lobe_k_min_1, ctx.rngReplay);
 
-        if(dot(eval.bsdfOverPdf, eval.bsdfOverPdf) == 0)
+        if(isZERO(dot(eval.bsdfOverPdf, eval.bsdfOverPdf)))
             return 0;
 
         RtRayQuery::Hit hitInfo = RtRayQuery::Hit::FindClosest<true, InCurrFrame>(ctx.pos, ctx.normal, 
@@ -701,7 +701,7 @@ namespace RPT_Util
             ctx = OffsetPathContext::Load(DTid, rbufferASrv, rbufferBSrv, rbufferCSrv, 
                 rbufferDSrv, rc.IsCase3());
 
-            if(dot(ctx.throughput, ctx.throughput) == 0)
+            if(isZERO(dot(ctx.throughput, ctx.throughput)))
                 return RPT_Util::OffsetPath::Init();
 
             // Advance rng of path context to what it would be after replay
@@ -722,7 +722,7 @@ namespace RPT_Util
             ret.partialJacobian = StepPath<InCurrFrame>(ctx, false, alpha_min, regularization, rc, 
                 g_frame, globals);
 
-            if(ret.partialJacobian == 0)
+            if(isZERO(ret.partialJacobian))
                 return ret;
 
             // Case 1
@@ -837,7 +837,7 @@ namespace RPT_Util
         const int16 numBounces = rc.k - (int16)2;
         BSDF::BSDFSample bsdfSample = BSDF::SampleBSDF(ctx.normal, ctx.surface, ctx.rngReplay);
 
-        if(dot(bsdfSample.bsdfOverPdf, bsdfSample.bsdfOverPdf) == 0)
+        if(isZERO(dot(bsdfSample.bsdfOverPdf, bsdfSample.bsdfOverPdf)))
         {
             ctx.throughput = 0;
             return ctx;

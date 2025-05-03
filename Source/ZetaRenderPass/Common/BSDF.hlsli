@@ -12,6 +12,7 @@
 #define BSDF_H
 
 #include "Sampling.hlsli"
+#include "Math.hlsli"
 #include "StaticTextureSamplers.hlsli"
 #include "../../ZetaCore/Core/Material.h"
 
@@ -356,7 +357,7 @@ namespace BSDF
         float g_wo)
     {
         // Reduces to Lambertian
-        if(sigma == 0)
+        if(isZERO(sigma))
             return ONE_OVER_PI * ndotwi * rho;
 
         float A = 1.0f / mad(0.287793398f, sigma, 1.0f);
@@ -646,7 +647,7 @@ namespace BSDF
             this.whdotwo = saturate(dot(wh, wo));
             this.whdotwi = this.whdotwo;
 
-            bool isInvalid = this.backfacing_wo || this.ndotwh == 0 || this.whdotwo == 0;
+            bool isInvalid = this.backfacing_wo || isZERO(this.ndotwh) || isZERO(this.whdotwo);
             this.invalid = isInvalid || ndotwi_n <= 0;
 
             this.ndotwi = max(ndotwi_n, 1e-5f);
@@ -675,7 +676,7 @@ namespace BSDF
             this.whdotwo = saturate(dot(wh, wo));
             this.whdotwi = abs(dot(wh, wi));
 
-            bool isInvalid = this.backfacing_wo || (this.specTr && (this.ndotwh == 0 || this.whdotwo == 0));
+            bool isInvalid = this.backfacing_wo || (this.specTr && (isZERO(this.ndotwh) || isZERO(this.whdotwo)));
             this.invalid = isInvalid || ndotwi_n >= 0 || !Transmissive() || this.metallic;
 
             this.ndotwi = max(abs(ndotwi_n), 1e-5f);
@@ -697,7 +698,7 @@ namespace BSDF
             // in case of TIR, wi = 0, from which n.wi = 0 and therefore also covered by condition below.
             bool backfacing_t = ndotwi_n >= 0 || !Transmissive() || this.metallic;
 
-            bool isInvalid = this.backfacing_wo || (this.specTr && (this.ndotwh == 0 || this.whdotwo == 0));
+            bool isInvalid = this.backfacing_wo || (this.specTr && (isZERO(this.ndotwh) || isZERO(this.whdotwo)));
             this.invalid = isInvalid || (this.reflection && backfacing_r) || (!this.reflection && backfacing_t);
 
             // Clamp to a small value to avoid division by zero
@@ -816,7 +817,7 @@ namespace BSDF
 
         bool Coated()
         {
-            return coat_weight != 0;
+            return isNotZERO(coat_weight);
         }
 
         bool GlossSpecular()
@@ -904,7 +905,7 @@ namespace BSDF
     template<bool EON>
     float3 EvalDiffuse(ShadingData surface)
     {
-        float s = surface.subsurface == 0 ? 1 : (float)surface.subsurface * 0.5f;
+        float s = surface.subsurface > 0 ? (float)surface.subsurface * 0.5f : 1;
 
 #if USE_OREN_NAYAR == 1
         // Diffuse roughness should be a separate parameter, but for now use specular 

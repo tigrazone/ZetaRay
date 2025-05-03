@@ -5,6 +5,7 @@
 #include "Reservoir.hlsli"
 #include "../../Common/LightSource.hlsli"
 #include "../../Common/RayQuery.hlsli"
+#include "../../Common/Math.hlsli"
 
 namespace RDI_Util
 {
@@ -17,13 +18,11 @@ namespace RDI_Util
             RT::EmissiveTriangle tri = g_emissives[lightIdx];
             ret.ID = tri.ID;
 
-            const float3 vtx1 = Light::DecodeEmissiveTriV1(tri);
-            const float3 vtx2 = Light::DecodeEmissiveTriV2(tri);
-            ret.lightPos = (1.0f - bary.x - bary.y) * tri.Vtx0 + bary.x * vtx1 + bary.y * vtx2;
+            const float3 vtx1 = Light::DecodeEmissiveTriV1(tri) - tri.Vtx0;
+            const float3 vtx2 = Light::DecodeEmissiveTriV2(tri) - tri.Vtx0;
+            ret.lightPos = tri.Vtx0 + bary.x * vtx1 + bary.y * vtx2;
 
-            ret.lightNormal = cross(vtx1 - tri.Vtx0, vtx2 - tri.Vtx0);
-            ret.lightNormal = dot(ret.lightNormal, ret.lightNormal) == 0 ? ret.lightNormal : 
-                normalize(ret.lightNormal);
+            ret.lightNormal = normalize(cross(vtx1, vtx2));
             // ret.lightNormal = tri.IsDoubleSided() && dot(-ret.wi, ret.lightNormal) < 0 ? 
             //     ret.lightNormal * -1.0f : ret.lightNormal;
             ret.doubleSided = tri.IsDoubleSided();
@@ -34,8 +33,9 @@ namespace RDI_Util
         void SetSurfacePos(float3 pos)
         {
             this.wi = this.lightPos - pos;
-            this.t = dot(this.wi, this.wi) == 0 ? 0 : length(wi);
-            this.wi = this.t == 0 ? 0 : this.wi / this.t;
+            this.t2 = dot(this.wi, this.wi);
+            this.t = this.t2 > 0 ? sqrt(this.t2) : 0;
+            this.wi = isZERO(this.t) ? 0 : this.wi / this.t;
             this.lightNormal = this.doubleSided && dot(-this.wi, this.lightNormal) < 0 ? 
                 -this.lightNormal : this.lightNormal;
         }
@@ -43,13 +43,13 @@ namespace RDI_Util
         float dWdA()
         {
             float cosThetaPrime = saturate(dot(this.lightNormal, -this.wi));
-            float dWdA = this.t == 0 ? 0 : cosThetaPrime / (this.t * this.t);
+            float dWdA = this.t2 > 0 ? cosThetaPrime / this.t2 : 0;
 
             return dWdA;
         }
 
         float3 wi;
-        float t;
+        float t, t2;
         uint ID;
         float3 lightPos;
         float3 lightNormal;
@@ -72,7 +72,7 @@ namespace RDI_Util
         ret.hit = false;
 
         float ndotwi = dot(normal, wi);
-        if(ndotwi == 0)
+        if(isZERO(ndotwi))
             return ret;
 
         bool wiBackface = ndotwi < 0;
@@ -80,7 +80,7 @@ namespace RDI_Util
         if(wiBackface)
         {
             if(transmissive)
-                normal *= -1;
+                normal = -normal;
             else
                 return ret;
         }

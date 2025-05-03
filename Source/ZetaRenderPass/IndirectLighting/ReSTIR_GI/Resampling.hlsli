@@ -44,7 +44,7 @@ namespace RGI_Util
 
         // Find sample point (second path vertex)
         BSDF::BSDFSample bsdfSample = BSDF::SampleBSDF(primaryNormal, primarySurface, rngThread);
-        if(bsdfSample.pdf == 0)
+        if(isZERO(bsdfSample.pdf))
             return r;
 
         GBUFFER_TRI_DIFF_GEO_A g_triA = ResourceDescriptorHeap[g_frame.CurrGBufferDescHeapOffset + 
@@ -226,7 +226,7 @@ namespace RGI_Util
         bool testVisibility = true)
     {
         float3 wi = r_curr.pos - candidate.posW;
-        if(dot(wi, wi) == 0)
+        if(isZERO(dot(wi, wi)))
             return 0;
 
         float t = length(wi);
@@ -277,11 +277,11 @@ namespace RGI_Util
     {
         float3 v_r = x1_r - x2_q;
         const float t_r2 = dot(v_r, v_r);
-        v_r = dot(v_r, v_r) == 0 ? v_r : v_r / max(sqrt(t_r2), 1e-6);
+        v_r = isZERO(dot(v_r, v_r)) ? v_r : v_r / max(sqrt(t_r2), 1e-6);
 
         float3 v_q = x1_q - x2_q;
         const float t_q2 = dot(v_q, v_q);
-        v_q = dot(v_q, v_q) == 0 ? v_q : v_q / max(sqrt(t_q2), 1e-6);
+        v_q = isZERO(dot(v_q, v_q)) ? v_q : v_q / max(sqrt(t_q2), 1e-6);
 
         // phi_r is the angle between v_r and surface normal at x2_q
         // phi_q is the angle between v_q and surface normal at x2_q
@@ -306,7 +306,7 @@ namespace RGI_Util
         const uint16_t M_new = (uint16_t)(r.M + r_prev.M);
 
         // Target at temporal pixel with current pixel's sample
-        if(r.w_sum != 0)
+        if(isNotZERO(r.w_sum))
         {
             float targetLum_prev = 0.0f;
 
@@ -325,7 +325,7 @@ namespace RGI_Util
             r.w_sum *= m_curr;
         }
 
-        if(r_prev.ID == UINT32_MAX || dot(r_prev.Lo, 1) == 0)
+        if(r_prev.ID == UINT32_MAX || isZERO(dot(r_prev.Lo, 1)))
         {
             float targetLum = Math::Luminance(r.target_z);
             r.W = targetLum > 0.0 ? r.w_sum / targetLum : 0.0;
@@ -403,7 +403,7 @@ namespace RGI_Util
                 }
             }
 
-            const float m_curr = denom == 0 ? 0 : p_curr / denom;
+            const float m_curr = isZERO(denom) ? 0 : p_curr / denom;
             r.w_sum *= m_curr;
         }
 
@@ -411,7 +411,7 @@ namespace RGI_Util
         for(int i = 0; i < 2; i++)    
         {
             float3 wi = r_prev[i].pos - posW;
-            float t = all(wi == 0) ? 0 : length(wi);
+            float t = isZERO(wi.x + wi.y + wi.z) ? 0 : length(wi);
             wi /= max(t, 1e-6);
             surface.SetWi(wi, normal);
 
@@ -440,8 +440,8 @@ namespace RGI_Util
                     denom += (float)r_prev[1 - i].M * targetLum_other / max(J_temporal_to_temporal, 1e-6);
                 }
 
-                denom = J_temporal_to_curr == 0 ? 0 : denom;
-                const float m_prev = denom == 0 ? 0 : numerator / denom;
+                denom = isZERO(J_temporal_to_curr) ? 0 : denom;
+                const float m_prev = isZERO(denom) ? 0 : numerator / denom;
                 // Resampling weight
                 const float w_prev = m_prev * targetLum_curr * r_prev[i].W;
 
@@ -514,7 +514,7 @@ namespace RGI_Util
 
         float3 wi = refract(-wo, normal, 1 / eta);
         // Switch to reflection for TIR
-        float3 virtualPos = dot(wi, wi) == 0 ? posW - wo * imageDist_refl : posW + wi * imageDist_tr;
+        float3 virtualPos = isZERO(dot(wi, wi)) ? posW - wo * imageDist_refl : posW + wi * imageDist_tr;
         float2 prevUV = Math::UVFromWorldPos(virtualPos, 
             float2(g_frame.RenderWidth, g_frame.RenderHeight), 
             g_frame.TanHalfFOV,

@@ -650,7 +650,7 @@ namespace BSDF
         BSDFEval eval_z = BSDF::Unified(surface);
         float targetLum = Math::Luminance(eval_z.f * func(wi_z));
 
-        if(targetLum == 0)
+        if(isZERO(targetLum))
             return 0;
 
         // Surface is opaque dielectric or thin walled
@@ -675,7 +675,7 @@ namespace BSDF
             w_sum_c = w;
         }
 
-        if(w_sum_g == 0)
+        if(isZERO(w_sum_g))
             return 0;
 
         float pdf_d;

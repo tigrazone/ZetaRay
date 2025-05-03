@@ -161,7 +161,7 @@ namespace RDI_Util
             const float3 vtx2 = Light::DecodeEmissiveTriV2(emissive);
             float3 lightNormal = cross(vtx1 - emissive.Vtx0, vtx2 - emissive.Vtx0);
             float twoArea = length(lightNormal);
-            lightNormal = dot(lightNormal, lightNormal) == 0 ? 0 : lightNormal / twoArea;
+            lightNormal = isZERO(dot(lightNormal, lightNormal)) ? 0 : lightNormal / twoArea;
             lightNormal = emissive.IsDoubleSided() && dot(-wi_offset, lightNormal) < 0 ? 
                 -lightNormal : lightNormal;
 
@@ -177,7 +177,7 @@ namespace RDI_Util
 #endif
         {
             wi_offset = r_curr.lightPos - candidate.pos;
-            const bool isZero = dot(wi_offset, wi_offset) == 0;
+            const bool isZero = isZERO(dot(wi_offset, wi_offset));
             t_offset = isZero ? 0 : length(wi_offset);
             wi_offset = isZero ? wi_offset : wi_offset / t_offset;
             candidate.surface.SetWi(wi_offset, candidate.normal);
@@ -236,7 +236,7 @@ namespace RDI_Util
             const float3 vtx2 = Light::DecodeEmissiveTriV2(emissive);
             float3 lightNormal = cross(vtx1 - emissive.Vtx0, vtx2 - emissive.Vtx0);
             float twoArea = length(lightNormal);
-            lightNormal = dot(lightNormal, lightNormal) == 0 ? 0 : lightNormal / twoArea;
+            lightNormal = isZERO(dot(lightNormal, lightNormal)) ? 0 : lightNormal / twoArea;
             lightNormal = emissive.IsDoubleSided() && dot(-wi_offset, lightNormal) < 0 ? 
                 -lightNormal : lightNormal;
 
@@ -286,11 +286,11 @@ namespace RDI_Util
         const uint16 newM = r_curr.M + r_prev.M;
 
         // Shift from current pixel to temporal
-        if(r_curr.w_sum != 0)
+        if(isNotZERO(r_curr.w_sum))
         {
             float3 wh_prev = Math::FromTangentFrameToWorld(candidate.normal, r_curr.wh_local);
             float whdotwo = abs(dot(candidate.surface.wo, wh_prev));
-            float jacobian = r_curr.partialJacobian == 0 ? 0 : whdotwo / r_curr.partialJacobian;
+            float jacobian = isZERO(r_curr.partialJacobian) ? 0 : whdotwo / r_curr.partialJacobian;
             jacobian = r_curr.halfVectorCopyShift ? jacobian : 1;
 
             float targetLum_prev = OffsetPathTarget_CtT(r_curr, alpha_min, candidate, wh_prev, 

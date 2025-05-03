@@ -147,13 +147,11 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 Gid : SV_GroupID, uint3 GTid :
         RT::EmissiveTriangle tri = g_emissives[r.lightIdx];
         r.lightID = tri.ID;
 
-        const float3 vtx1 = Light::DecodeEmissiveTriV1(tri);
-        const float3 vtx2 = Light::DecodeEmissiveTriV2(tri);
-        r.lightPos = (1.0f - r.bary.x - r.bary.y) * tri.Vtx0 + r.bary.x * vtx1 + r.bary.y * vtx2;
+        const float3 vtx1 = Light::DecodeEmissiveTriV1(tri) - tri.Vtx0;
+        const float3 vtx2 = Light::DecodeEmissiveTriV2(tri) - tri.Vtx0;
+        r.lightPos = tri.Vtx0 + r.bary.x * vtx1 + r.bary.y * vtx2;
 
-        r.lightNormal = cross(vtx1 - tri.Vtx0, vtx2 - tri.Vtx0);
-        r.lightNormal = dot(r.lightNormal, r.lightNormal) == 0 ? r.lightNormal : 
-            normalize(r.lightNormal);
+        r.lightNormal = normalize(cross(vtx1, vtx2));
         r.doubleSided = tri.IsDoubleSided();
 
         r.LoadTarget(swizzledDTid, g_local.TargetDescHeapIdx);

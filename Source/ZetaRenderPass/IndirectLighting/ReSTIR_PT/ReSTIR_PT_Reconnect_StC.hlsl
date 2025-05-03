@@ -246,7 +246,7 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 Gid : SV_GroupID, uint3 GTid :
         Texture2D<float2> >(samplePos, g_local.Reservoir_A_DescHeapIdx, 
         g_local.Reservoir_A_DescHeapIdx + 1);
 
-    if((r_curr.w_sum != 0) && (r_spatial.M > 0) && !r_curr.rc.Empty())
+    if(isNotZERO(r_curr.w_sum) && (r_spatial.M > 0) && !r_curr.rc.Empty())
         r_curr.LoadWSum(swizzledDTid, g_local.PrevReservoir_A_DescHeapIdx + 1);
 
     Globals globals = InitGlobals(flags.transmissive);

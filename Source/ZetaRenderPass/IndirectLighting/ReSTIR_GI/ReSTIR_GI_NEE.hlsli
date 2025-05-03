@@ -43,7 +43,7 @@ namespace RGI_Util
                 float3 lightNormal = cross(vtx1 - emissive.Vtx0, vtx2 - emissive.Vtx0);
                 float twoArea = length(lightNormal);
                 twoArea = max(twoArea, 1e-6);
-                lightNormal = dot(lightNormal, lightNormal) == 0 ? 1.0.xxx : lightNormal / twoArea;
+                lightNormal = isZERO(dot(lightNormal, lightNormal)) ? 1.0.xxx : lightNormal / twoArea;
                 lightNormal = emissive.IsDoubleSided() && dot(-wi, lightNormal) < 0 ? 
                     -lightNormal : lightNormal;
 

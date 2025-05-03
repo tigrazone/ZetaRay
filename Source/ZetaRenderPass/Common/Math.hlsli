@@ -17,6 +17,10 @@
 #define UINT16_MAX           0xffffu
 #define UINT32_MAX           0xffffffffu
 
+#define NEARzero 1e-25f
+#define isZERO(x) ((x)>-NEARzero && (x)<NEARzero)
+#define isNotZERO(x) ((x)>NEARzero || (x)<-NEARzero)
+
 namespace Math
 {
     // Returns whether pos is in [0, dim).
@@ -41,7 +45,7 @@ namespace Math
     // Returns largest float value f' such that f' < f.
     float PrevFloat32(float f)
     {
-        if(f == 0.0f)
+        if(isZERO(f))
             f = -0.0f;
 
         uint u = asuint(f);
@@ -114,8 +118,8 @@ namespace Math
 
     float3 SphericalToCartesian(float r, float theta, float phi)
     {
-        float sinTheta = sin(theta);
-        return float3(r * sinTheta * cos(phi), r * cos(theta), -r * sinTheta * sin(phi));
+        float r_sinTheta = r * sin(theta);
+        return float3(r_sinTheta * cos(phi), r * cos(theta), -r_sinTheta * sin(phi));
     }
 
     float2 SphericalFromCartesian(float3 w)
@@ -157,15 +161,15 @@ namespace Math
     template<typename T>
     T LinearDepthFromNDC(T z_NDC, float near)
     {
-        return select(z_NDC == 0.0f, FLT_MAX, near / z_NDC);
+        return select(isZERO(z_NDC), FLT_MAX, near / z_NDC);
     }
 
     float2 NDCFromUV(float2 uv)
     {
-        float2 ndc = uv * 2.0f - 1.0f;
-        ndc.y = -ndc.y;
+        uv += uv - 1.0f;
+        uv.y = -uv.y;
 
-        return ndc;
+        return uv;
     }
 
     float2 UVFromNDC(float2 ndc)
@@ -262,9 +266,8 @@ namespace Math
 
     float3 TangentSpaceToWorldSpace(float2 bumpNormal2, float3 tangent, float3 normal, float scale)
     {
-        float3 bumpNormal = float3(mad(2.0f, bumpNormal2, -1.0f), 0.0f);
-        bumpNormal.z = sqrt(saturate(1.0f - dot(bumpNormal, bumpNormal)));
-        float3 scaledBumpNormal = bumpNormal * float3(scale, scale, 1.0f);
+        float3 scaledBumpNormal = float3((bumpNormal2 + bumpNormal2 - 1.0f) * scale, 0.0f);
+        scaledBumpNormal.z = sqrt(saturate(1.0f - dot(scaledBumpNormal, scaledBumpNormal)));
 
         // Invalid scale or bump, normalize() leads to NaN
         if (dot(scaledBumpNormal, scaledBumpNormal) < 1e-6f)

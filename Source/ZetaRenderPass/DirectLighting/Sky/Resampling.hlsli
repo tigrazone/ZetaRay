@@ -151,7 +151,7 @@ namespace SkyDI_Util
         const uint16 newM = r.M + r_prev.M;
 
         // Shift from current pixel to temporal
-        if(r.w_sum != 0)
+        if(isNotZERO(r.w_sum))
         {
             float targetLum_prev = 0;
             float3 wi_offset = r.wx; 
@@ -165,7 +165,7 @@ namespace SkyDI_Util
                     float3 wh_t = Math::FromTangentFrameToWorld(candidate.normal, wh_local);
 
                     wi_offset = reflect(-candidate.surface.wo, wh_t);
-                    jacobian = r.partialJacobian == 0 ? 0 : 
+                    jacobian = isZERO(r.partialJacobian) ? 0 : 
                         abs(dot(candidate.surface.wo, wh_t)) / r.partialJacobian;
                 }
 

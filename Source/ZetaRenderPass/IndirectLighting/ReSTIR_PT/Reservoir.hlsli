@@ -27,7 +27,7 @@ namespace RPT_Util
 
             this.M += 1;
 
-            if(weight == 0)
+            if(isZERO(weight))
                 return false;
 
             this.w_sum += weight;

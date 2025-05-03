@@ -105,7 +105,7 @@ namespace ReSTIR_Util
         float3 bsdfxCosTheta = BSDF::Unified(surface).f;
 #endif
 
-        if(dot(bsdfxCosTheta, bsdfxCosTheta) == 0)
+        if(isZERO(dot(bsdfxCosTheta, bsdfxCosTheta)))
             return ret;
 
         if(TestVisibility)

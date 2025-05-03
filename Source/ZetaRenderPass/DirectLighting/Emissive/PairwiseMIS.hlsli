@@ -86,7 +86,7 @@ namespace RDI_Util
                             const float3 vtx2 = Light::DecodeEmissiveTriV2(emissive);
                             float3 lightNormal = cross(vtx1 - emissive.Vtx0, vtx2 - emissive.Vtx0);
                             float twoArea = length(lightNormal);
-                            lightNormal = dot(lightNormal, lightNormal) == 0 ? 0 : lightNormal / twoArea;
+                            lightNormal = isZERO(dot(lightNormal, lightNormal)) ? 0 : lightNormal / twoArea;
                             lightNormal = emissive.IsDoubleSided() && dot(-wi_c, lightNormal) < 0 ? 
                                 -lightNormal : lightNormal;
 
@@ -134,7 +134,7 @@ namespace RDI_Util
                     float3 wh_c = Math::FromTangentFrameToWorld(normal_c, r_c.wh_local);
                     float whdotwo_i = abs(dot(surface_i.wo, wh_i));
                     float whdotwo_c = abs(dot(surface_c.wo, wh_c));
-                    jacobian_c_to_i = whdotwo_c == 0 ? 0 : whdotwo_i / whdotwo_c;
+                    jacobian_c_to_i = isZERO(whdotwo_c) ? 0 : whdotwo_i / whdotwo_c;
                     jacobian_c_to_i = r_c.halfVectorCopyShift ? jacobian_c_to_i : 1;
 
 #if USE_HALF_VECTOR_COPY_SHIFT == 1
@@ -154,7 +154,7 @@ namespace RDI_Util
                             const float3 vtx2 = Light::DecodeEmissiveTriV2(emissive);
                             float3 lightNormal = cross(vtx1 - emissive.Vtx0, vtx2 - emissive.Vtx0);
                             float twoArea = length(lightNormal);
-                            lightNormal = dot(lightNormal, lightNormal) == 0 ? 0 : lightNormal / twoArea;
+                            lightNormal = isZERO(dot(lightNormal, lightNormal)) ? 0 : lightNormal / twoArea;
                             lightNormal = emissive.IsDoubleSided() && dot(-wi_i, lightNormal) < 0 ? 
                                 -lightNormal : lightNormal;
 
@@ -171,7 +171,7 @@ namespace RDI_Util
 #endif
                     {
                         float3 wi_i = r_c.lightPos - pos_i;
-                        const bool isZero = dot(wi_i, wi_i) == 0;
+                        const bool isZero = isZERO(dot(wi_i, wi_i));
                         float t_i = isZero ? 0 : length(wi_i);
                         wi_i = isZero ? 0 : wi_i / t_i;
                         surface_i.SetWi(wi_i, normal_i);

@@ -146,7 +146,7 @@ namespace ZetaRay::Core
         uint16_t m_renderWidth;
         uint16_t m_renderHeight;
         UINT m_presentFlags = 0;
-        uint16_t m_vsyncInterval = 1;
+        uint16_t m_vsyncInterval = 0;       //vsync off
         uint16_t m_globalDoubleBuffIdx = 0;
 
         D3D12_VIEWPORT m_displayViewport;

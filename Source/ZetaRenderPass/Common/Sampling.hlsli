@@ -221,23 +221,22 @@ namespace Sampling
 
     float2 UniformSampleDiskConcentric(float2 u)
     {
-        float a = 2.0f * u.x - 1.0f;
-        float b = 2.0f * u.y - 1.0f;
-        if(a == 0 && b == 0)
+        u += u - 1.0f;
+        if(isZERO(u.x) && isZERO(u.y))
             return 0;
 
         float r;
         float phi;
 
-        if (a * a > b * b)
+        if (u.x * u.x > u.y * u.y)
         {
-            r = a;
-            phi = PI_OVER_4 * (b / a);
+            r = u.x;
+            phi = PI_OVER_4 * (u.y / u.x);
         }
         else
         {
-            r = b;
-            phi = PI_OVER_2 - PI_OVER_4 * (a / b);
+            r = u.y;
+            phi = PI_OVER_2 - PI_OVER_4 * (u.x / u.y);
         }
 
         return float2(r * cos(phi), r * sin(phi));
@@ -246,8 +245,9 @@ namespace Sampling
     float3 UniformSampleSphere(float2 u)
     {
         // Compute radius r (branchless).
-        float u0 = 2.0f * u.x - 1.0f;
-        float u1 = 2.0f * u.y - 1.0f;
+        u += u - 1.0f;
+        #define u0 (u.x)
+        #define u1 (u.y)
 
         float d = 1.0f - (abs(u0) + abs(u1));
         float r = 1.0f - abs(d);
@@ -255,11 +255,14 @@ namespace Sampling
         // Compute phi in the first quadrant (branchless, except for the
         // division-by-zero test), using sign(u) to map the result to the
         // correct quadrant below.
-        float phi = (r == 0) ? 0 : PI_OVER_4 * ((abs(u1) - abs(u0)) / r + 1.0f);
+        float phi = isZERO(r) ? 0 : PI_OVER_4 * ((abs(u1) - abs(u0)) / r + 1.0f);
         float f = r * sqrt(2.0f - r * r);
         float x = f * sign(u0) * cos(phi);
         float y = f * sign(u1) * sin(phi);
         float z = sign(d) * (1.0f - r * r);
+
+        #undef u0
+        #undef u1
 
         return float3(x, y, z);
     }
@@ -267,23 +270,17 @@ namespace Sampling
     // Any point inside the triangle with vertices V0, V1, and V2 can be expressed as
     //        P = b0 * V0 + b1 * V1 + b2 * V2
     // where b0 + b1 + b2 = 1. Therefore, only b1 and b2 need to be sampled.
-    float2 UniformSampleTriangle(float2 u)
+    float2 UniformSampleTriangle(float2 square)
     {
         // Ref: Eric Heitz. A Low-Distortion Map Between Triangle and Square. 2019.
-        float b1, b2;
-        
-        if (u.y > u.x)
-        {
-            b1 = u.x * 0.5f;
-            b2 = u.y - b1;
+        if (square.x < square.y) {
+            square.x *= 0.5f;
+            square.y -= square.x;
+        } else {
+            square.y *= 0.5f;
+            square.x -= square.y;
         }
-        else
-        {
-            b2 = u.y * 0.5f;
-            b1 = u.x - b2;
-        }
-
-        return float2(b1, b2);
+        return square;
     }
 }
 

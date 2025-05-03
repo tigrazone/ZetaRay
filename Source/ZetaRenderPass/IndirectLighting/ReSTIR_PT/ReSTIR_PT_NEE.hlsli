@@ -166,7 +166,7 @@ namespace RPT_Util
             const float3 vtx2 = Light::DecodeEmissiveTriV2(emissive);
             float3 lightNormal = cross(vtx1 - emissive.Vtx0, vtx2 - emissive.Vtx0);
             float twoArea = length(lightNormal);
-            lightNormal = dot(lightNormal, lightNormal) == 0 ? 0.0 : lightNormal / twoArea;
+            lightNormal = isZERO(dot(lightNormal, lightNormal)) ? 0.0 : lightNormal / twoArea;
             lightNormal = emissive.IsDoubleSided() && (dot(-wi, lightNormal) < 0) ? 
                 -lightNormal : lightNormal;
             float lightPdf = 0;
@@ -311,7 +311,7 @@ namespace RPT_Util
         float3 ld = le * BSDF::Unified(surface).f * dwdA;
 
         ReSTIR_Util::DirectLightingEstimate ret = ReSTIR_Util::DirectLightingEstimate::Init();
-        if(dot(ld, ld) == 0)
+        if(isZERO(dot(ld, ld)))
             return ret;
 
         if(lobe == BSDF::LOBE::ALL)
@@ -360,7 +360,7 @@ namespace RPT_Util
         }
 
         ReSTIR_Util::DirectLightingEstimate ret = ReSTIR_Util::DirectLightingEstimate::Init();
-        if(dot(ld, ld) == 0)
+        if(isZERO(dot(ld, ld)))
             return ret;
 
         if(lobe == BSDF::LOBE::ALL)

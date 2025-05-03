@@ -200,7 +200,7 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 Gid : SV_GroupID, uint3 GTid :
         samplePos, g_local.Reservoir_A_DescHeapIdx);
 
     // Shift current reservoir's path to spatial pixel and resample
-    if((r_curr.w_sum != 0) && !r_curr.rc.Empty())
+    if(isNotZERO(r_curr.w_sum) && !r_curr.rc.Empty())
     {
         r_curr.Load_Reconnection<NEE_EMISSIVE, Texture2D<uint4>, Texture2D<uint4>, 
             Texture2D<half>, Texture2D<float2>, Texture2D<uint2> >(swizzledDTid, 

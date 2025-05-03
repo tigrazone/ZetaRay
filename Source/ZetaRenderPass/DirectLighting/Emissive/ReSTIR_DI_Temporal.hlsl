@@ -70,7 +70,7 @@ Reservoir RIS_InitialCandidates(uint2 DTid, float3 pos, float3 normal, float rou
             const float3 vtx2 = Light::DecodeEmissiveTriV2(emissive);
             lightNormal = cross(vtx1 - emissive.Vtx0, vtx2 - emissive.Vtx0);
             float twoArea = length(lightNormal);
-            lightNormal = dot(lightNormal, lightNormal) == 0 ? 0 : lightNormal / twoArea;
+            lightNormal = isZERO(dot(lightNormal, lightNormal)) ? 0 : lightNormal / twoArea;
             lightNormal = emissive.IsDoubleSided() && dot(-wi, lightNormal) < 0 ? -lightNormal : lightNormal;
             doubleSided = emissive.IsDoubleSided();
             emissiveID = emissive.ID;
@@ -148,7 +148,7 @@ Reservoir RIS_InitialCandidates(uint2 DTid, float3 pos, float3 normal, float rou
 
         float3 target = 0;
         float3 wi = lightSample.pos - pos;
-        const bool isZero = dot(wi, wi) == 0;
+        const bool isZero = isZERO(dot(wi, wi));
         const float t = isZero ? 0 : length(wi);
         wi = isZero ? wi : wi / t;
         const float dwdA = isZero ? 0 : saturate(dot(lightSample.normal, -wi)) / (t * t);

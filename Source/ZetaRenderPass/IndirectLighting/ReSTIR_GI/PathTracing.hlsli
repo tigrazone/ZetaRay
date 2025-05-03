@@ -75,7 +75,7 @@ namespace ReSTIR_RT
                 bsdfSample = BSDF::SampleBSDF(normal, surface, rngThread);
 
             // Terminate early as extending this path won't contribute to incident radiance
-            if(Math::Luminance(bsdfSample.bsdfOverPdf) == 0)
+            if(isZERO(Math::Luminance(bsdfSample.bsdfOverPdf)))
                 break;
 
             // Trace a ray to find next path vertex

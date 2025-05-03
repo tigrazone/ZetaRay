@@ -245,7 +245,7 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 Gid : SV_GroupID, uint3 GTid :
         prevPixel, g_local.PrevReservoir_A_DescHeapIdx);
 
     // Shift current reservoir's path to previous pixel and resample
-    if(r_curr.w_sum != 0 && r_prev.M > 0 && !r_curr.rc.Empty())
+    if(isNotZERO(r_curr.w_sum) && r_prev.M > 0 && !r_curr.rc.Empty())
     {
         r_curr.Load_Reconnection<NEE_EMISSIVE, RWTexture2D<uint4>, RWTexture2D<uint4>, 
             RWTexture2D<half>, RWTexture2D<float2>, RWTexture2D<uint2> >(swizzledDTid, 
