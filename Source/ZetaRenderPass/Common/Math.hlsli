@@ -286,20 +286,31 @@ namespace Math
         return mul(scaledBumpNormal, TangentSpaceToWorld);
     }
 
-    // Builds an orthonormal coordinate system.
-    // Ref: T. Duff, J. Burgess, P. Christensen, C. Hery, A. Kensler, M. Liani, 
-    // R. Villemin, "Building an Orthonormal Basis, Revisited," Journal of Computer Graphics Techniques, 2017.
+    /*
+    This uses the technique from "Improved accuracy when building an orthonormal
+    basis" by Nelson Max, https://jcgt.org/published/0006/01/02.
+
+    Any tangent-generating algorithm must produce at least one discontinuity
+    when operating on a sphere (due to the hairy ball theorem); this has a
+    small ring-shaped discontinuity at `normal.z == -0.99998796`.
+    */
     struct CoordinateSystem
     {
-        static CoordinateSystem Build(float3 n)
+        static CoordinateSystem Build(float3 normal)
         {
-            const float s = SignNotZero(n.z);
-            const float a = -1.0 / (s + n.z);
-            const float b = n.x * n.y * a;
-
             CoordinateSystem ret;
-            ret.b1 = float3(mad(n.x * a, n.x * s, 1.0f), s * b, -s * n.x);
-            ret.b2 = float3(b, mad(n.y * a, n.y, s), -n.y);
+
+            if(normal.z < -0.99998796)  // Handle the singularity
+            {
+              ret.b1 = float3(0.0, -1.0, 0.0);
+              ret.b2 = float3(-1.0, 0.0, 0.0);
+              return ret;
+            }
+            
+            float inv_1plus_nz = 1.0 / (1.0 + normal.z);
+            float nxa = -normal.x * inv_1plus_nz;
+            ret.b1 = float3(mad(normal.x, nxa, 1.0f), nxa * normal.y, -normal.x);
+            ret.b2 = float3(ret.b1.y, 1.0 - normal.y * normal.y * inv_1plus_nz, -normal.y);
 
             return ret;
         }
