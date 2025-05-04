@@ -71,12 +71,12 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 Gid : SV_GroupID, uint Gidx : 
     const float emissiveStrength = (float)tri.GetStrength();
     power *= emissiveFactor * emissiveStrength;
 
-    const float3 vtx1 = Light::DecodeEmissiveTriV1(tri);
-    const float3 vtx2 = Light::DecodeEmissiveTriV2(tri);
-    const float surfaceArea = TriangleArea(tri.Vtx0, vtx1, vtx2);
-    const float pdf = surfaceArea > 0 ? 1.0f / surfaceArea : 0;
-    float mcEstimate = pdf > 0 ? Math::Luminance(power) * PI / (pdf * ESTIMATE_TRI_POWER_NUM_SAMPLES_PER_TRI) : 0;
-
     if (laneIdx == 0)
+    {
+        const float3 vtx1 = Light::DecodeEmissiveTriV1(tri);
+        const float3 vtx2 = Light::DecodeEmissiveTriV2(tri);
+        const float surfaceArea = TriangleArea(tri.Vtx0, vtx1, vtx2);
+        float mcEstimate = surfaceArea > 0 ? Math::Luminance(power) * PI * surfaceArea / (ESTIMATE_TRI_POWER_NUM_SAMPLES_PER_TRI) : 0;
         g_power[triIdx] = mcEstimate;
+    }
 }
