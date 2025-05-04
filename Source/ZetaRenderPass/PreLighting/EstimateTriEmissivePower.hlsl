@@ -48,6 +48,8 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 Gid : SV_GroupID, uint Gidx : 
         // no need for NonUniformResourceIndex, constant across the wave
         EMISSIVE_MAP g_emissiveMap = ResourceDescriptorHeap[g_frame.EmissiveMapsDescHeapOffset + emissiveTex];
         const uint base = laneIdx * NUM_SAMPLES_PER_LANE;
+        float2 triUV10 = tri.UV1 - tri.UV0;
+        float2 triUV20 = tri.UV2 - tri.UV0;
 
         [unroll]
         for(int i = 0; i < (int)NUM_SAMPLES_PER_LANE; i++)
@@ -55,7 +57,7 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 Gid : SV_GroupID, uint Gidx : 
             float2 u = g_halton[base + i];
             float2 bary = Sampling::UniformSampleTriangle(u);
 
-            float2 texUV = (1.0f - bary.x - bary.y) * tri.UV0 + bary.x * tri.UV1 + bary.y * tri.UV2;
+            float2 texUV = tri.UV0 + bary.x * triUV10 + bary.y * triUV20;
             float3 le = g_emissiveMap.SampleLevel(g_samLinearWrap, texUV, 0).rgb;
             
             power += le;

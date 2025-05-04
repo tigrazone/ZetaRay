@@ -114,10 +114,10 @@ namespace Light
             float2 u = rng.Uniform2D();
             ret.bary = Sampling::UniformSampleTriangle(u);
 
-            const float3 vtx1 = Light::DecodeEmissiveTriV1(tri);
-            const float3 vtx2 = Light::DecodeEmissiveTriV2(tri);
-            ret.pos = (1.0f - ret.bary.x - ret.bary.y) * tri.Vtx0 + ret.bary.x * vtx1 + ret.bary.y * vtx2;
-            ret.normal = cross(vtx1 - tri.Vtx0, vtx2 - tri.Vtx0);
+            const float3 vtx1 = Light::DecodeEmissiveTriV1(tri) - tri.Vtx0;
+            const float3 vtx2 = Light::DecodeEmissiveTriV2(tri) - tri.Vtx0;
+            ret.pos = tri.Vtx0 + ret.bary.x * vtx1 + ret.bary.y * vtx2;
+            ret.normal = cross(vtx1, vtx2);
             bool normalIs0 = isZERO(dot(ret.normal, ret.normal));
             float twoArea = length(ret.normal);
             ret.pdf = normalIs0 ? 0.0f : 2.0f / twoArea;
@@ -189,7 +189,7 @@ namespace Light
             const uint offset = NonUniformResourceIndex(emissiveMapsDescHeapOffset + emissiveTex);
             EMISSIVE_MAP g_emissiveMap = ResourceDescriptorHeap[offset];
 
-            float2 texUV = (1.0f - bary.x - bary.y) * tri.UV0 + bary.x * tri.UV1 + bary.y * tri.UV2;
+            float2 texUV = tri.UV0 + bary.x * (tri.UV1 - tri.UV0) + bary.y * (tri.UV2 - tri.UV0);
             le *= g_emissiveMap.SampleLevel(s, texUV, 0).rgb;
         }
 
