@@ -50,9 +50,10 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 Gid : SV_GroupID, uint Gidx : 
         const uint base = laneIdx * NUM_SAMPLES_PER_LANE;
         float2 triUV10 = tri.UV1 - tri.UV0;
         float2 triUV20 = tri.UV2 - tri.UV0;
+        int iNUM_SAMPLES_PER_LANE = (int)NUM_SAMPLES_PER_LANE;
 
         [unroll]
-        for(int i = 0; i < (int)NUM_SAMPLES_PER_LANE; i++)
+        for(int i = 0; i < iNUM_SAMPLES_PER_LANE; i++)
         {
             float2 u = g_halton[base + i];
             float2 bary = Sampling::UniformSampleTriangle(u);
