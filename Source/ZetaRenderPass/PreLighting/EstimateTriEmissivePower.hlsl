@@ -69,7 +69,7 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 Gid : SV_GroupID, uint Gidx : 
 
     const float3 emissiveFactor = tri.GetFactor();
     const float emissiveStrength = (float)tri.GetStrength();
-    power = power * emissiveFactor * emissiveStrength;
+    power *= emissiveFactor * emissiveStrength;
 
     const float3 vtx1 = Light::DecodeEmissiveTriV1(tri);
     const float3 vtx2 = Light::DecodeEmissiveTriV2(tri);
