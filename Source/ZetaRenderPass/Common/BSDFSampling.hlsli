@@ -97,7 +97,7 @@ namespace BSDF
         ret.wi = wi_r;
         ret.lobe = BSDF::LOBE::GLOSSY_R;
         // Account for change of density from half vector to incident vector
-        ret.pdf = surface.GlossSpecular() ? 1 : wh_pdf / 4.0f;
+        ret.pdf = surface.GlossSpecular() ? 1 : wh_pdf * 0.25f;
         ret.pdf *= pdf_base;
 
         BSDFEval eval = BSDF::Unified(surface);
@@ -456,7 +456,7 @@ namespace BSDF
         }
 
         const float wh_pdf = BSDF::GGXMicrofacetPdf(surface.alpha, surface.ndotwh, surface.ndotwo);
-        ret.pdf = !surface.GlossSpecular() ? wh_pdf / 4.0f : surface.ndotwh >= MIN_N_DOT_H_SPECULAR;
+        ret.pdf = !surface.GlossSpecular() ? wh_pdf * 0.25f : surface.ndotwh >= MIN_N_DOT_H_SPECULAR;
         ret.pdf *= pdf_base;
         ret.bsdfOverPdf = ret.f / ret.pdf;
 
@@ -588,7 +588,7 @@ namespace BSDF
         {
             float pdf_gr = surface.GlossSpecular() ? 
                 surface.ndotwh >= MIN_N_DOT_H_SPECULAR : 
-                wh_pdf / 4.0f;
+                wh_pdf * 0.25f;
             pdf_gr *= pdf_base;
 
             return surface.reflection ? pdf_c + pdf_gr: 0;
@@ -611,7 +611,7 @@ namespace BSDF
         if(surface.reflection)
         {
             // Account for change of density from half vector to incident vector
-            pdf_g *= surface.GlossSpecular() ? 1 : (wh_pdf / 4.0f);
+            pdf_g *= surface.GlossSpecular() ? 1 : (wh_pdf * 0.25f);
             pdf_g *= pdf_r;
 
             return pdf_g + pdf_c;

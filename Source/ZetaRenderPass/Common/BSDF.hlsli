@@ -402,7 +402,7 @@ namespace BSDF
             // Now in order for the above to hold, we must have
             //      f(w_o, w_i) = F * delta(n - wh) / ndotwi
             // Note that ndotwi cancels out.
-            return (ndotwh >= MIN_N_DOT_H_SPECULAR) * fr;
+            return (ndotwh >= MIN_N_DOT_H_SPECULAR) ? fr : 0;
         }
 
         float alphaSq = alpha * alpha;
@@ -440,9 +440,12 @@ namespace BSDF
             // Now in order for the above to hold, we must have
             //      f(w_o, w_i) = (1 - F) * delta(n - wh) / ndotwi
             // Note that ndotwi cancels out.
+            /*
             float f = ndotwh >= MIN_N_DOT_H_SPECULAR;
             // f *= 1 / (surface.eta * surface.eta);
             return f * (1 - fr);
+            */
+            return ndotwh >= MIN_N_DOT_H_SPECULAR ? (1 - fr) : 0;
         }
 
         float alphaSq = alpha * alpha;
@@ -462,24 +465,29 @@ namespace BSDF
     // normal. PDF is GGX(wh) * max(0, whdotwo) * G1(ndotwo) / ndotwo.
     // Ref: J. Dupuy and A. Benyoub, "Sampling Visible GGX Normals with Spherical Caps," 
     // High Performance Graphics, 2023.
-    float3 SampleGGXVNDF(float3 wo, float alpha_x, float alpha_y, float2 u)
+    float3 SampleGGXVNDF(float3 wo, float2 alpha2, float2 u)
     {
         // Section 3.2: transforming the view direction to the hemisphere configuration
-        float3 Vh = normalize(float3(alpha_x * wo.x, alpha_y * wo.y, wo.z));
+        float3 Vh = normalize(float3(wo.xy * alpha2, wo.z));
 
         // Sample a spherical cap in (-Vh.z, 1]
-        float phi = TWO_PI * u.x;
         float z = mad((1.0f - u.y), (1.0f + Vh.z), -Vh.z);
+        /*
         float sinTheta = sqrt(saturate(1.0f - z * z));
+        float phi = TWO_PI * u.x;
         float x = sinTheta * cos(phi);
         float y = sinTheta * sin(phi);
         float3 c = float3(x, y, z);
+        */
+        float2 cos_sin;
+        sincos(TWO_PI * u.x, cos_sin.y, cos_sin.x);
+        float3 c = float3(sqrt(saturate(1.0f - z * z)) * cos_sin, z);
 
         // Compute halfway direction
         float3 Nh = c + Vh;
 
         // Section 3.4: transforming the normal back to the ellipsoid configuration
-        float3 Ne = normalize(float3(alpha_x * Nh.x, alpha_y * Nh.y, max(0.0f, Nh.z)));
+        float3 Ne = normalize(float3(Nh.xy * alpha2, max(0.0f, Nh.z)));
 
         return Ne;
     }
@@ -495,6 +503,8 @@ namespace BSDF
         float3 wiStd = -normalize(alpha * wi_xy + wi_z);
 
         // sample a spherical cap in (-wiStd.z, 1]
+        float z = 1.0 - u.y * (1.0 + dot(wiStd, n));
+        /*
         float wiStd_z = dot(wiStd, n);
         float z = 1.0 - u.y * (1.0 + wiStd_z);
         float sinTheta = sqrt(saturate(1.0f - z * z));
@@ -502,10 +512,18 @@ namespace BSDF
         float x = sinTheta * cos(phi);
         float y = sinTheta * sin(phi);
         float3 cStd = float3(x, y, z);
+        */
+        float2 cos_sin;
+        sincos(TWO_PI * u.x - PI, cos_sin.y, cos_sin.x);
+        float3 cStd = float3(sqrt(saturate(1.0f - z * z)) * cos_sin, z);
 
         // reflect sample to align with normal
+        /*
         float3 up = float3(0, 0, 1.000001); // Used for the singularity
         float3 wr = n + up;
+        */
+        float3 wr = n;
+        wr.z += 1.000001;
         float3 c = dot(wr, cStd) * wr / wr.z - cStd;
 
         // compute halfway direction as standard normal
@@ -527,7 +545,8 @@ namespace BSDF
         // we need its inverse. Since M is an orthogonal matrix, its inverse is just its transpose.
         float3x3 worldToLocal = float3x3(onb.b1, onb.b2, shadingNormal);
         float3 woLocal = mul(worldToLocal, wo);
-        float3 whLocal = SampleGGXVNDF(woLocal, alpha, alpha, u);
+        float2 alpha2 = float2(alpha, alpha);
+        float3 whLocal = SampleGGXVNDF(woLocal, alpha2, u);
 
         // Go from local space back to world space.
         float3 wh = mad(whLocal.x, onb.b1, mad(whLocal.y, onb.b2, whLocal.z * shadingNormal));
@@ -982,7 +1001,7 @@ namespace BSDF
             return (surface.ndotwh >= MIN_N_DOT_H_SPECULAR);
 
         float pdf = GGXMicrofacetPdf(surface.alpha, surface.ndotwh, surface.ndotwo);
-        return pdf / 4.0f;
+        return pdf * 0.25f;
     }
 
     float EvalTranslucentTr(ShadingData surface, float fr)
@@ -1055,7 +1074,7 @@ namespace BSDF
             return (surface.ndotwh >= MIN_N_DOT_H_SPECULAR);
 
         float pdf = GGXMicrofacetPdf(surface.coat_alpha, surface.ndotwh, surface.ndotwo);
-        return pdf / 4.0f;
+        return pdf * 0.25f;
     }
 
     // Includes multiplication by n.wi from the rendering equation
