@@ -113,7 +113,7 @@ namespace BSDF
         float3 wi_t = refract(-surface.wo, wh, 1 / surface.eta);
         float3 func_t = func(wi_t);
         float p_r = eval.Fr_g.x * Math::Luminance(func_r);
-        p_r = p_r / (p_r + (1 - eval.Fr_g.x) * Math::Luminance(func_t));
+        p_r /= (p_r + (1 - eval.Fr_g.x) * Math::Luminance(func_t));
 
         // Use Fresnel to decide between reflection and transmission
         if (u_wrs_1 < p_r)
@@ -471,7 +471,7 @@ namespace BSDF
         float targetScaleOtherLum = Math::Luminance(targetScaleOther);
 
         float p_r = eval.Fr_g.x * (lobe == BSDF::LOBE::GLOSSY_R ? targetScaleLum : targetScaleOtherLum);
-        p_r = p_r / (p_r + (1 - eval.Fr_g.x) * (lobe == BSDF::LOBE::GLOSSY_R ? targetScaleOtherLum : targetScaleLum));
+        p_r /= (p_r + (1 - eval.Fr_g.x) * (lobe == BSDF::LOBE::GLOSSY_R ? targetScaleOtherLum : targetScaleLum));
 
         if(lobe == BSDF::LOBE::GLOSSY_R)
         {
@@ -483,13 +483,9 @@ namespace BSDF
 
         ret.bsdfOverPdf = !surface.invalid * !surface.reflection * 
             BSDF::TranslucentTrOverPdf(surface, eval.Fr_g.x);
-        ret.bsdfOverPdf *= BSDF::TransmittanceToDielectricBaseTr(surface);
-        ret.bsdfOverPdf *= targetScale;
-        ret.bsdfOverPdf /= pdf_base;
-        ret.bsdfOverPdf /= (1 - p_r);
-        ret.pdf = 1 - p_r;
+        ret.pdf = (1 - p_r) * pdf_base;
+        ret.bsdfOverPdf *= BSDF::TransmittanceToDielectricBaseTr(surface) * targetScale / ret.pdf;
         ret.pdf *= surface.GlossSpecular() ? surface.ndotwh >= MIN_N_DOT_H_SPECULAR : wh_pdf * surface.whdotwo;
-        ret.pdf *= pdf_base;
 
         if(!surface.GlossSpecular())
         {
@@ -606,7 +602,7 @@ namespace BSDF
         float Fr_g = surface.Fresnel().x;
         // Prob. of reflection vs transmission
         float pdf_r = Fr_g * (surface.reflection ? targetScaleLum : targetScaleOtherLum);
-        pdf_r = pdf_r / (pdf_r + (1 - Fr_g) * (surface.reflection ? targetScaleOtherLum : targetScaleLum));
+        pdf_r /= (pdf_r + (1 - Fr_g) * (surface.reflection ? targetScaleOtherLum : targetScaleLum));
 
         if(surface.reflection)
         {
@@ -621,10 +617,9 @@ namespace BSDF
 
         if(!surface.GlossSpecular())
         {
-            pdf_g *= wh_pdf * surface.whdotwo;
             float dwh_dwi = BSDF::JacobianHalfVecToIncident_Tr(surface.eta, 
                 surface.whdotwo, surface.whdotwi);
-            pdf_g *= dwh_dwi;
+            pdf_g *= dwh_dwi * wh_pdf * surface.whdotwo;
         }
 
         return pdf_g;

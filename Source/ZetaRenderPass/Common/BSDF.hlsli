@@ -124,7 +124,19 @@ namespace BSDF
     {
         float tmp = 1.0f - whdotwx;
         float tmpSq = tmp * tmp;
+        /*
         return mad(tmpSq * tmpSq * tmp, 1 - F0, F0);
+
+        tmp^5 * (1 - F0) + F0
+        r0 + (1 - r0) * (1 - whdotwx)^5
+
+        https://www.photometric.io/blog/improving-schlicks-approximation/
+        r0 + (1 - whdotwx - r0) * (1 - whdotwx)^4
+
+        return F0 + (tmp - F0) * tmpSq * tmpSq;
+        */
+
+        return mad(tmpSq * tmpSq, tmp - F0, F0);
     }
 
     // Specialization for dielectrics where Fresnel is assumed to be wavelength-independent
@@ -132,7 +144,10 @@ namespace BSDF
     {
         float tmp = 1.0f - whdotwx;
         float tmpSq = tmp * tmp;
-        return mad(tmpSq * tmpSq * tmp, 1 - F0, F0);
+        //return mad(tmpSq * tmpSq * tmp, 1 - F0, F0);
+
+        // https://www.photometric.io/blog/improving-schlicks-approximation/
+        return mad(tmpSq * tmpSq, tmp - F0, F0);
     }
 
     // ndotwi: Cosine of angle between incident vector and normal
@@ -420,7 +435,7 @@ namespace BSDF
     // Putting everything together, p(w_i) = p(w_h) * dw_h / dw_i.
     float JacobianHalfVecToIncident_Tr(float eta, float whdotwo, float whdotwi)
     {
-        float denom = mad(whdotwo, 1 / eta, whdotwi);
+        float denom = whdotwo / eta + whdotwi;
         denom *= denom;
         float dwh_dwi = denom > 0 ? whdotwi / denom : 0;
 
@@ -675,15 +690,13 @@ namespace BSDF
 
         void SetWi_Refl(float3 wi, float3 shadingNormal)
         {
-            float3 wh = normalize(wi + this.wo);
-            this.SetWi_Refl(wi, shadingNormal, wh);
+            this.SetWi_Refl(wi, shadingNormal, normalize(wi + this.wo));
         }
 
         void SetWi_Tr(float3 wi, float3 shadingNormal)
         {
             float3 wh = normalize(mad(wi, eta, this.wo));
-            wh = this.eta > 1 ? -wh : wh;
-            this.SetWi_Tr(wi, shadingNormal, wh);
+            this.SetWi_Tr(wi, shadingNormal, this.eta > 1 ? -wh : wh);
         }
 
         void SetWi_Tr(float3 wi, float3 shadingNormal, float3 wh)
@@ -715,7 +728,7 @@ namespace BSDF
             bool backfacing_r = ndotwi_n <= 0;
             // transmission - wi and wo have to be on the opposite sides w.r.t. normal. Furthermore,
             // in case of TIR, wi = 0, from which n.wi = 0 and therefore also covered by condition below.
-            bool backfacing_t = ndotwi_n >= 0 || !Transmissive() || this.metallic;
+            bool backfacing_t = this.reflection || !Transmissive() || this.metallic;
 
             bool isInvalid = this.backfacing_wo || (this.specTr && (isZERO(this.ndotwh) || isZERO(this.whdotwo)));
             this.invalid = isInvalid || (this.reflection && backfacing_r) || (!this.reflection && backfacing_t);
@@ -816,7 +829,7 @@ namespace BSDF
         void Regularize()
         {
             // i.e. to linear roughness in [~0.3, 0.5]
-            this.alpha = this.alpha < 0.25f ? clamp(2.0f * this.alpha, 0.1f, 0.25f) : this.alpha;
+            this.alpha = this.alpha < 0.25f ? clamp(this.alpha + this.alpha, 0.1f, 0.25f) : this.alpha;
         }
 
         float3 TransmissionTint()
