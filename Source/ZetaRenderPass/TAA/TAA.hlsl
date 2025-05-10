@@ -157,8 +157,7 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID)
 
             float3 neighborColor = max(g_currSignal[neighborAddrr].rgb, 0.0.xxx);
             
-            float weight = weightSums[i+1] * weightSums[j+1];
-            weight *= 1.0 / (1.0 + Math::Luminance(neighborColor));
+            float weight = (weightSums[i+1] * weightSums[j+1]) / (1.0 + Math::Luminance(neighborColor));
 
             reconstructed += neighborColor * weight;
             weightSum += weight;
