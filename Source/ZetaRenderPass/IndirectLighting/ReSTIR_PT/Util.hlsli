@@ -4,6 +4,8 @@
 #include "../IndirectLighting_Common.h"
 #include "Reservoir.hlsli"
 
+#define _1_15   32768 //1 << 15
+
 namespace RPT_Util
 {
     static const int SPATIAL_NEIGHBOR_OFFSET = 32;
@@ -34,7 +36,7 @@ namespace RPT_Util
         Texture2D<uint> g_threadMap = ResourceDescriptorHeap[descHeapIdx];
         uint encoded = g_threadMap[DTid];
 
-        error = (encoded & (1 << 15)) != 0;
+        error = (encoded & (_1_15)) != 0;
         uint2 decoded = uint2(encoded, (encoded >> 7)) & 0x3f;
         int2 decodedI = (int2)decoded - 31;
 

@@ -145,6 +145,15 @@ struct RNG
         return float3(u0, u1, u2);
     }
 
+    float3 Uniform3D2()
+    {
+        float u0 = Uniform() - 0.5f;
+        float u1 = Uniform() - 0.5f;
+        float u2 = Uniform() - 0.5f;
+
+        return float3(u0 + u0, u1 + u1, u2 + u2);
+    }
+
     float4 Uniform4D()
     {
         float u0 = Uniform();
@@ -182,33 +191,45 @@ namespace Sampling
     // Returns samples about the (0, 0, 1) axis
     float3 SampleCosineWeightedHemisphere(float2 u, out float pdf)
     {
+        /*
         const float phi = TWO_PI * u.y;
         const float sinTheta = sqrt(u.x);
 
         const float x = cos(phi) * sinTheta;
         const float y = sin(phi) * sinTheta;
+        */
         const float z = sqrt(1.0f - u.x); // = cos(theta)
 
         pdf = z * ONE_OVER_PI; // = cos(theta) / PI
 
-        return float3(x, y, z);
+        //return float3(x, y, z);
+
+        float2 cos_sin;
+        sincos(TWO_PI * u.y, cos_sin.y, cos_sin.x);
+        return float3(sqrt(u.x) * cos_sin, z);
     }
 
     // Returns samples about the (0, 0, 1) axis
     float3 UniformSampleCone(float2 u, float cosThetaMax, out float pdf)
     {
-        const float phi = TWO_PI * u.y;
+        //const float phi = TWO_PI * u.y;
 
         const float cosTheta = saturate((1.0f - u.x) + u.x * cosThetaMax);
+        /*
         const float sinTheta = sqrt(1.0f - cosTheta * cosTheta);
 
         const float x = cos(phi) * sinTheta;
         const float y = sin(phi) * sinTheta;
         const float z = cosTheta;
+        */
 
         pdf = ONE_OVER_2_PI / (1.0f - cosThetaMax);
 
-        return float3(x, y, z);
+        //return float3(x, y, z);
+
+        float2 cos_sin;
+        sincos(TWO_PI * u.y, cos_sin.y, cos_sin.x);
+        return float3(sqrt(1.0f - cosTheta * cosTheta) * cos_sin, cosTheta);
     }
 
     float2 UniformSampleDisk(float2 u)

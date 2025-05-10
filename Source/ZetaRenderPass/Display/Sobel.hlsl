@@ -26,19 +26,23 @@ struct VSOut
 
 float Sobel(int2 DTid, Texture2D<float> g_mask)
 {
-    float3 gradientX = -1.0f * g_mask[int2(DTid.x - 1, DTid.y - 1)] -
-        2.0f * g_mask[int2(DTid.x - 1, DTid.y)] -
-        1.0f * g_mask[int2(DTid.x - 1, DTid.y + 1)] +
-        1.0f * g_mask[int2(DTid.x + 1, DTid.y - 1)] +
-        2.0f * g_mask[int2(DTid.x + 1, DTid.y)] +
-        1.0f * g_mask[int2(DTid.x + 1, DTid.y + 1)];
+    float3 gradientX = -g_mask[int2(DTid.x - 1, DTid.y - 1)] -
+               g_mask[int2(DTid.x - 1, DTid.y)] +
+               g_mask[int2(DTid.x - 1, DTid.y)] -
+               g_mask[int2(DTid.x - 1, DTid.y + 1)] +
+               g_mask[int2(DTid.x + 1, DTid.y - 1)] +
+               g_mask[int2(DTid.x + 1, DTid.y)] +
+               g_mask[int2(DTid.x + 1, DTid.y)] +
+               g_mask[int2(DTid.x + 1, DTid.y + 1)];
 
-    float3 gradientY = 1.0f * g_mask[int2(DTid.x - 1, DTid.y - 1)] +
-        2.0f * g_mask[int2(DTid.x, DTid.y - 1)] +
-        1.0f * g_mask[int2(DTid.x + 1, DTid.y - 1)] -
-        1.0f * g_mask[int2(DTid.x - 1, DTid.y + 1)] -
-        2.0f * g_mask[int2(DTid.x, DTid.y + 1)] -
-        1.0f * g_mask[int2(DTid.x + 1, DTid.y + 1)];
+    float3 gradientY = g_mask[int2(DTid.x - 1, DTid.y - 1)] +
+               g_mask[int2(DTid.x, DTid.y - 1)] +
+               g_mask[int2(DTid.x, DTid.y - 1)] +
+               g_mask[int2(DTid.x + 1, DTid.y - 1)] -
+               g_mask[int2(DTid.x - 1, DTid.y + 1)] -
+               g_mask[int2(DTid.x, DTid.y + 1)] -
+               g_mask[int2(DTid.x, DTid.y + 1)] -
+               g_mask[int2(DTid.x + 1, DTid.y + 1)];
 
     float3 gradientMagnitude = sqrt(gradientX * gradientX + gradientY * gradientY);
     float lum = Math::Luminance(gradientMagnitude);

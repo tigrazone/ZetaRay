@@ -28,6 +28,14 @@ enum GBUFFER_OFFSET
 #define GBUFFER_TRI_DIFF_GEO_A Texture2D<uint4> 
 #define GBUFFER_TRI_DIFF_GEO_B Texture2D<uint2> 
 
+#define _1__1  2    //1 << 1
+#define _1__2  4    //1 << 2
+#define _1__3  8    //1 << 3
+#define _1__4  16   //1 << 4
+#define _1__5  32   //1 << 5
+#define _1__6  64   //1 << 6
+#define _1__7  128  //1 << 7
+
 namespace GBuffer
 {
     struct Flags
@@ -71,12 +79,12 @@ namespace GBuffer
 
         Flags ret;
         ret.transmissive = (v & 0x1) != 0;
-        ret.emissive = (v & (1 << 1)) != 0;
-        ret.invalid = (v & (1 << 2)) != 0;
-        ret.trDepthGt0 = (v & (1 << 3)) != 0;
-        ret.subsurface = (v & (1 << 4)) != 0;
-        ret.coated = (v & (1 << 5)) != 0;
-        ret.metallic = (v & (1 << 7)) != 0;
+        ret.emissive = (v & (_1__1)) != 0;
+        ret.invalid = (v & (_1__2)) != 0;
+        ret.trDepthGt0 = (v & (_1__3)) != 0;
+        ret.subsurface = (v & (_1__4)) != 0;
+        ret.coated = (v & (_1__5)) != 0;
+        ret.metallic = (v & (_1__7)) != 0;
 
         return ret;
     }
@@ -84,14 +92,14 @@ namespace GBuffer
     bool4 DecodeMetallic(float4 encoded)
     {
         uint4 v = (uint4) round(encoded * 255.0f);
-        return (v & (1 << 7)) != 0;
+        return (v & (_1__7)) != 0;
     }
 
     void DecodeMetallicEmissive(float4 encoded, out bool4 isMetallic, out bool4 isEmissive)
     {
         uint4 v = (uint4) round(encoded * 255.0f);
-        isEmissive = (v & (1 << 1)) != 0;
-        isMetallic = (v & (1 << 7)) != 0;
+        isEmissive = (v & (_1__1)) != 0;
+        isMetallic = (v & (_1__7)) != 0;
     }
 
     float EncodeIOR(float ior)

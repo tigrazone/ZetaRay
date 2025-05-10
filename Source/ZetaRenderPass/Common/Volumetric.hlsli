@@ -43,7 +43,7 @@ namespace Volume
     float PhaseHG(float cosTheta, float g)
     {
         float g2 = g * g;
-        float denom = (1 - g2) / (1 + g2 - 2 * g * cosTheta);
+        float denom = (1 - g2) / (1 + g2 - (g + g) * cosTheta);
 
         return ONE_OVER_4_PI * g2 / (denom * sqrt(denom));
     }
@@ -51,7 +51,7 @@ namespace Volume
     // An approximation Henyey-Greenstein phase function that is faster to compute
     float SchlickPhaseFunction(float cosTheta, float g)
     {
-        float k = 1.55f * g - 0.55f * g * g * g;
+        float k = g * (1.55f - 0.55f * g * g);
         float denom = 1.0f - k * cosTheta;
 
         return ONE_OVER_4_PI * (1.0f - k * k) / (denom * denom);
@@ -61,24 +61,28 @@ namespace Volume
     // Density functions for heterogeneous medium
     //--------------------------------------------------------------------------------------
 
+    #define _div8       0.125f
+    #define _div1_2     0.83333333333333333333333333333333f
+    #define _div15      0.06666666666666666666666666666667f
+
     // Spatial density of participating media for Rayleigh scattering. Altitude should be 
     // in km.
     float DensityRayleigh(float altitude)
     {
-        return exp(-max(0.0f, altitude / 8.0f));
+        return exp(-max(0.0f, altitude * _div8));
     }
 
     // Spatial density of participating media for Rayleigh scattering. Altitude should be 
     // in km.
     float DensityMie(float altitude)
     {
-        return exp(-max(0.0f, altitude / 1.2f));
+        return exp(-max(0.0f, altitude * _div1_2));
     }
 
     // Spatial density of ozone. Altitude should be in km.
     float DensityOzone(float altitude)
     {
-        return max(0, 1 - abs(altitude - 25.0f) / 15.0f);
+        return max(0, 1 - abs(altitude - 25.0f) * _div15);
     }
 
     // Altitude should be in km
@@ -106,9 +110,8 @@ namespace Volume
         float delta = mDotdir * mDotdir - dot(rayOrigin, rayOrigin) + radius * radius;
 
         // here, ray is always starting inside the sphere, so there's one negative answer and
-        // one positive answer, the latter is what's intended    
-        delta = sqrt(delta);
-        return -mDotdir + delta;
+        // one positive answer, the latter is what's intended
+        return -mDotdir + sqrt(delta);
     }
 
     bool IntersectRayPlanet(float radius, float3 rayOrigin, float3 rayDir, out float t)

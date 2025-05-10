@@ -7,7 +7,7 @@ namespace LVG
 {
     uint FlattenVoxelIndex(uint3 voxelIdx, uint3 gridDim)
     {
-        return voxelIdx.z * gridDim.x * gridDim.y + voxelIdx.y * gridDim.x + voxelIdx.x;
+        return gridDim.x * (voxelIdx.z * gridDim.y + voxelIdx.y) + voxelIdx.x;
     }
 
     float3 VoxelCenter(int3 voxelIdx, int3 gridDim, float3 voxelExtents, float3x4 viewInv, float offset_y = 0)
@@ -22,9 +22,8 @@ namespace LVG
         // voxel space Y points in the opposite direction of camera space Y
         voxelIdxCamSpace.y = -voxelIdxCamSpace.y;
 
-        float3 corner = voxelIdxCamSpace * 2 * voxelExtents;
         float3 s = Math::SignNotZero(voxelIdxCamSpace);
-        float3 centerV = corner + voxelExtents * s;
+        float3 centerV = (voxelIdxCamSpace + voxelIdxCamSpace + s) * voxelExtents;
         centerV.y += offset_y;
         float3 centerW = mul(viewInv, float4(centerV, 1));
         
@@ -56,7 +55,7 @@ namespace LVG
         StructuredBuffer<RT::VoxelSample> g_voxel, out RT::VoxelSample s, inout RNG rng, float offset_y = 0, 
         bool jitter = true)
     {
-        float3 posJittered = jitter ? pos + (rng.Uniform3D() * 2 - 1) * voxelExtents : pos;
+        float3 posJittered = jitter ? pos + rng.Uniform3D2() * voxelExtents : pos;
         
         int3 voxelIdx;
         if(!MapPosToVoxel(posJittered, gridDim, voxelExtents, view, voxelIdx, offset_y))

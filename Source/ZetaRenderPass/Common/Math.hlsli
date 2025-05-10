@@ -21,6 +21,9 @@
 #define isZERO(x) ((x)>-NEARzero && (x)<NEARzero)
 #define isNotZERO(x) ((x)>NEARzero || (x)<-NEARzero)
 
+#define float_1_16      65535.0f
+#define float_1_16_     1.5259021896696421759365224689097e-5f
+
 namespace Math
 {
     // Returns whether pos is in [0, dim).
@@ -611,12 +614,12 @@ namespace Math
     uint16_t FloatToUNorm16(float f)
     {
         f = saturate(f);
-        return (uint16_t)mad(f, float((1 << 16) - 1), 0.5f);
+        return (uint16_t)mad(f, float_1_16, 0.5f);
     }
 
     float UNorm16ToFloat(uint16_t u)
     {
-        return u / (float)((1 << 16) - 1);
+        return u * float_1_16_;
     }
 
     uint16_t2 UnpackUintToUint16(uint x)
@@ -632,17 +635,17 @@ namespace Math
     uint16_t2 EncodeAsUNorm2(float2 u)
     {
         u = saturate(u);
-        return (uint16_t2)mad(u, float((1 << 16) - 1), 0.5f);
+        return (uint16_t2)mad(u, float_1_16, 0.5f);
     }
 
     float2 DecodeUNorm2(uint16_t2 u)
     {
-        return u / float((1 << 16) - 1);
+        return u * float_1_16_;
     }
 
     float4 DecodeNormalized4(uint16_t4 u)
     {
-        float4 decoded = u / float((1 << 16) - 1);
+        float4 decoded = u * float_1_16_;
         // [0, 1] -> [-1, 1]
         return mad(decoded, 2.0f, -1.0f);
     }
