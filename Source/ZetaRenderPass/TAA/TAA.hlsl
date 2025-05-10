@@ -29,18 +29,30 @@ ConstantBuffer<cbTAA> g_local : register(b1);
 float Mitchell1D(in float x, in float B, in float C)
 {
     x = abs(x + x);
-    const float oneDivSix = 1.0f / 6.0f;
 
     if (x > 1)
     {
+        /*
         return ((-B - 6.0f * C) * x * x * x + (6.0f * B + 30.0f * C) * x * x +
-                (-12.0f * B - 48.0f * C) * x + (8.0f * B + 24.0f * C)) * oneDivSix;
+                (-12.0f * B - 48.0f * C) * x + (8.0f * B + 24.0f * C)) / 6.0f;
+                //14*
+        */
+        return ((B + 6.0f * C) * (8.0f - x * (12.0f + x * x)) + (6.0f * B + 30.0f * C) * x * x) / 6.0f;
+               //8*
     }
     else
     {
+        /*
         return ((12.0f - 9.0f * B - 6.0f * C) * x * x * x +
                 (-18.0f + 12.0f * B + 6.0f * C) * x * x +
-                (6.0f - 2.0f * B)) * oneDivSix;
+                (6.0f - 2.0f * B)) / 6.0f;
+                //11*
+        */
+        return (6 * x * x * (
+                    (2.0f - 1.5f * B - C) * x +
+                    (B + B - 3.0f + C)
+                ) + 6.0f - B - B) / 6.0f;
+                //5*
     }
 }
 
@@ -84,7 +96,13 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID)
         return;
     }
 
-    float weightSum = Mitchell1D(0, 0.33f, 0.33f);
+    float3 weightSums = float3(
+                                Mitchell1D(-1, 0.33f, 0.33f),
+                                Mitchell1D( 0, 0.33f, 0.33f),
+                                Mitchell1D( 1, 0.33f, 0.33f)
+    );
+
+    float weightSum = weightSums[1];
     weightSum *= weightSum;
     float3 reconstructed = currColor * weightSum;
     float3 firstMoment = currColor;
@@ -112,7 +130,7 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID)
 
             float3 neighborColor = max(g_currSignal[neighborAddrr].rgb, 0.0.xxx);
             
-            float weight = Mitchell1D(i, 0.33f, 0.33f) * Mitchell1D(j, 0.33f, 0.33f);
+            float weight = weightSums[i+1] * weightSums[j+1];
             weight *= 1.0 / (1.0 + Math::Luminance(neighborColor));
 
             reconstructed += neighborColor * weight;
