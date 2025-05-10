@@ -32,29 +32,29 @@ float Mitchell1D(in float x, in float B, in float C)
 
     if (x > 1)
     {
-        /*
         return ((-B - 6.0f * C) * x * x * x + (6.0f * B + 30.0f * C) * x * x +
                 (-12.0f * B - 48.0f * C) * x + (8.0f * B + 24.0f * C)) / 6.0f;
                 //14*
-        */
+        /*
         return ((6.0f * x * (x * (B + 5.0f * C) - 2.0f * (B + 4.0f * C))
                         + 8 * (D + 3.0f * C)) -
                         (B + 6.0f * C) * x * x * x) / 6.0f;
                //12*
+        */
     }
     else
     {
-        /*
         return ((12.0f - 9.0f * B - 6.0f * C) * x * x * x +
                 (-18.0f + 12.0f * B + 6.0f * C) * x * x +
                 (6.0f - 2.0f * B)) / 6.0f;
                 //11*
-        */
+        /*
         return (6 * x * x * (
                     (2.0f - 1.5f * B - C) * x +
                     (B + B - 3.0f + C)
                 ) + 6.0f - B - B) / 6.0f;
                 //5*
+        */
     }
 }
 
